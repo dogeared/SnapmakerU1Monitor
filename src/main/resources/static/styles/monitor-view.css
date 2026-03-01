@@ -4,6 +4,14 @@
     align-items: center;
 }
 
+.view-title {
+    margin-bottom: 0;
+}
+
+.status-label {
+    margin-top: 0;
+}
+
 .camera-image {
     max-width: 100%;
     max-height: 70vh;

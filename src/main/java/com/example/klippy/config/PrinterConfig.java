@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "printer")
 public record PrinterConfig(
+        String name,
+        String model,
         String host,
         int port,
         long refreshIntervalMs,
@@ -15,6 +17,8 @@ public record PrinterConfig(
         long continuePromptMs
 ) {
     public PrinterConfig {
+        if (name == null || name.isBlank()) name = "";
+        if (model == null || model.isBlank()) model = "";
         if (host == null || host.isBlank()) host = "192.168.68.105";
         if (port <= 0) port = 7125;
         if (refreshIntervalMs <= 0) refreshIntervalMs = 2000;

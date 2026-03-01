@@ -30,6 +30,7 @@ public class MonitorView extends VerticalLayout {
 
     private final SnapshotService snapshotService;
     private final PrinterConfig config;
+    private final H2 title;
     private final Image image;
     private final Span statusLabel;
     private final AtomicLong frameCounter = new AtomicLong(0);
@@ -62,9 +63,11 @@ public class MonitorView extends VerticalLayout {
 
         addClassName("monitor-view");
 
-        H2 title = new H2("3D Printer Camera Monitor");
+        title = new H2(buildTitle());
+        title.addClassName("view-title");
 
         statusLabel = new Span("Connecting to " + config.host() + ":" + config.port() + "...");
+        statusLabel.addClassName("status-label");
 
         startButton = new Button("Start Camera", e -> startCamera());
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -83,10 +86,11 @@ public class MonitorView extends VerticalLayout {
         image = new Image();
         image.setAlt("Printer camera snapshot");
         image.addClassName("camera-image");
+        image.setVisible(false);
 
         VerticalLayout statsPanel = buildStatsPanel();
 
-        add(title, statusLabel, buttonBar, inactivityMessage, image, statsPanel);
+        add(title, statusLabel, buttonBar, inactivityMessage, statsPanel, image);
     }
 
     private VerticalLayout buildStatsPanel() {
@@ -107,8 +111,23 @@ public class MonitorView extends VerticalLayout {
         timeRemainingLabel.addClassName("time-label");
         timeRow.add(printTimeLabel, timeRemainingLabel);
 
-        panel.add(stateLabel, filenameLabel, progressLabel, timeRow);
+        panel.add(stateLabel, filenameLabel, progressLabel, printTimeLabel, timeRemainingLabel);
         return panel;
+    }
+
+    private String buildTitle() {
+        String name = config.name();
+        String model = config.model();
+        if (!name.isEmpty() && !model.isEmpty()) {
+            return name + " " + model;
+        }
+        if (!name.isEmpty()) {
+            return name;
+        }
+        if (!model.isEmpty()) {
+            return model;
+        }
+        return "3D Printer Camera Monitor";
     }
 
     @Override
@@ -117,6 +136,16 @@ public class MonitorView extends VerticalLayout {
         ui = attachEvent.getUI();
 
         executor = Executors.newScheduledThreadPool(3);
+
+        // If no name/model configured, fetch hostname from printer as the title
+        if (config.name().isEmpty() && config.model().isEmpty()) {
+            executor.execute(() -> {
+                String printerName = snapshotService.fetchPrinterName();
+                if (!printerName.isEmpty()) {
+                    ui.access(() -> title.setText(printerName));
+                }
+            });
+        }
 
         startImagePolling();
 
@@ -212,7 +241,7 @@ public class MonitorView extends VerticalLayout {
         ui.access(() -> {
             ConfirmDialog dialog = new ConfirmDialog();
             dialog.setHeader("Continue?");
-            dialog.setText("The camera feed is still running. Continue? (auto-stops in 10 seconds)");
+            dialog.setText("The camera feed is still running. Continue?");
             dialog.setCloseOnEsc(false);
             dialog.setCancelable(true);
 
@@ -270,6 +299,9 @@ public class MonitorView extends VerticalLayout {
         String dataUri = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(data);
         ui.access(() -> {
             image.setSrc(dataUri);
+            if (!image.isVisible()) {
+                image.setVisible(true);
+            }
             statusLabel.setText("Connected — refreshing every " + config.refreshIntervalMs() + "ms");
         });
     }

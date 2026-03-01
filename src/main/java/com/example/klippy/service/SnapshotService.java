@@ -79,6 +79,51 @@ public class SnapshotService {
     }
 
     /**
+     * Fetches the printer name. Tries the Fluidd database instanceName first,
+     * then falls back to the hostname from /printer/info.
+     */
+    public String fetchPrinterName() {
+        // Try Fluidd instanceName first
+        String url = config.moonrakerBaseUrl() + "/server/database/item?namespace=fluidd";
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                JsonNode root = objectMapper.readTree(response.body());
+                String instanceName = root.path("result").path("value")
+                        .path("uiSettings").path("general").path("instanceName").asText("");
+                if (!instanceName.isEmpty()) {
+                    return instanceName;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch Fluidd database: {}", e.getMessage());
+        }
+
+        // Fall back to hostname from /printer/info
+        url = config.moonrakerBaseUrl() + "/printer/info";
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                JsonNode root = objectMapper.readTree(response.body());
+                return root.path("result").path("hostname").asText("");
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch printer info: {}", e.getMessage());
+        }
+        return "";
+    }
+
+    /**
      * Queries Moonraker for print_stats and virtual_sdcard objects via HTTP.
      */
     public PrintStats fetchPrintStats() {
