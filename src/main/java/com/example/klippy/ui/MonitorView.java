@@ -9,6 +9,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Route("")
+@StyleSheet("/styles/monitor-view.css")
 public class MonitorView extends VerticalLayout {
 
     private final SnapshotService snapshotService;
@@ -58,8 +60,7 @@ public class MonitorView extends VerticalLayout {
         this.snapshotService = snapshotService;
         this.config = config;
 
-        setSizeFull();
-        setAlignItems(Alignment.CENTER);
+        addClassName("monitor-view");
 
         H2 title = new H2("3D Printer Camera Monitor");
 
@@ -76,17 +77,12 @@ public class MonitorView extends VerticalLayout {
         buttonBar.setSpacing(true);
 
         inactivityMessage = new Span();
-        inactivityMessage.getStyle().set("color", "#d32f2f");
-        inactivityMessage.getStyle().set("font-weight", "bold");
+        inactivityMessage.addClassName("inactivity-message");
         inactivityMessage.setVisible(false);
 
         image = new Image();
         image.setAlt("Printer camera snapshot");
-        image.setMaxWidth("100%");
-        image.getStyle().set("max-height", "70vh");
-        image.getStyle().set("object-fit", "contain");
-        image.getStyle().set("border", "1px solid #ccc");
-        image.getStyle().set("border-radius", "4px");
+        image.addClassName("camera-image");
 
         VerticalLayout statsPanel = buildStatsPanel();
 
@@ -95,24 +91,20 @@ public class MonitorView extends VerticalLayout {
 
     private VerticalLayout buildStatsPanel() {
         VerticalLayout panel = new VerticalLayout();
-        panel.setWidthFull();
-        panel.setMaxWidth("600px");
-        panel.setPadding(true);
+        panel.addClassName("stats-panel");
+        panel.setPadding(false);
         panel.setSpacing(false);
-        panel.getStyle().set("background", "#f5f5f5");
-        panel.getStyle().set("border-radius", "8px");
-        panel.getStyle().set("font-family", "monospace");
 
         stateLabel.setText("State: --");
         filenameLabel.setText("File: --");
         progressLabel.setText("Progress: --");
 
         HorizontalLayout timeRow = new HorizontalLayout();
-        timeRow.setWidthFull();
+        timeRow.addClassName("time-row");
         printTimeLabel.setText("Printing: --:--:--");
         timeRemainingLabel.setText("Remaining: --:--:--");
-        printTimeLabel.getStyle().set("flex", "1");
-        timeRemainingLabel.getStyle().set("flex", "1");
+        printTimeLabel.addClassName("time-label");
+        timeRemainingLabel.addClassName("time-label");
         timeRow.add(printTimeLabel, timeRemainingLabel);
 
         panel.add(stateLabel, filenameLabel, progressLabel, timeRow);
