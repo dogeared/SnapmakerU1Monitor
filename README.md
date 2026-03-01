@@ -91,3 +91,7 @@ src/main/java/com/example/klippy/
 # Run the packaged JAR
 java -jar target/klippy-0.0.1-SNAPSHOT.jar
 ```
+
+## What's Next
+
+I'm going to add an auth layer so that it's suitable for deploying and accessing publicly
