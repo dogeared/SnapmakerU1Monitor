@@ -56,13 +56,41 @@ If `printer.name` and `printer.model` are not set, the app fetches the printer n
 2. Klipper hostname from `GET /printer/info`
 3. Falls back to "3D Printer Camera Monitor"
 
+## OIDC Authentication
+
+The app requires OIDC authentication — all routes are protected by default. It works with any OIDC/OAuth2 provider (Okta, Auth0, Keycloak, Google, etc.) via Spring Security's auto-discovery.
+
+### Setup
+
+1. Register an application with your OIDC provider
+2. Set the redirect URI to: `http://localhost:8080/login/oauth2/code/oidc-provider`
+3. Set the following environment variables:
+
+```bash
+export OIDC_CLIENT_ID=your-client-id
+export OIDC_CLIENT_SECRET=your-client-secret
+export OIDC_ISSUER_URI=https://your-provider.example.com
+```
+
+4. Run the app — opening `http://localhost:8080` will redirect to your provider's login page
+
+### Auth Flow
+
+1. User hits the app URL
+2. Spring Security redirects to the OIDC provider
+3. User authenticates with the provider
+4. Provider redirects back with an authorization code
+5. Spring Security exchanges the code for tokens and creates a session
+6. User lands on the camera monitor view
+
 ## Architecture
 
 ```
 src/main/java/com/example/klippy/
 ├── KlippyApplication.java              # Spring Boot entry point, Vaadin Push config
 ├── config/
-│   └── PrinterConfig.java              # @ConfigurationProperties record
+│   ├── PrinterConfig.java              # @ConfigurationProperties record
+│   └── SecurityConfig.java             # OIDC authentication via VaadinWebSecurity
 ├── service/
 │   ├── MoonrakerWebSocketClient.java   # WebSocket JSON-RPC client (oneshot token auth)
 │   ├── SnapshotService.java            # Camera control, image fetching, print stats
@@ -91,7 +119,3 @@ src/main/java/com/example/klippy/
 # Run the packaged JAR
 java -jar target/klippy-0.0.1-SNAPSHOT.jar
 ```
-
-## What's Next
-
-I'm going to add an auth layer so that it's suitable for deploying and accessing publicly
