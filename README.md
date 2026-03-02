@@ -18,8 +18,18 @@ A Spring Boot + Vaadin web application that provides a live camera feed and prin
 
 ## Quick Start
 
+**With OIDC authentication (default):**
+
 ```bash
+OIDC_CLIENT_ID=your-client-id \
+OIDC_ISSUER_URI=https://your-provider.example.com \
 ./mvnw spring-boot:run
+```
+
+**Without authentication:**
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--global.security.enabled=false"
 ```
 
 Then open [http://localhost:8080](http://localhost:8080) in your browser.
@@ -119,3 +129,54 @@ src/main/java/com/example/klippy/
 # Run the packaged JAR
 java -jar target/klippy-0.0.1-SNAPSHOT.jar
 ```
+
+### Production Build
+
+The `production` Maven profile compiles and bundles the Vaadin frontend for optimized delivery (no dev mode tools or live reload):
+
+```bash
+# Package a production-ready JAR
+./mvnw clean package -Pproduction
+
+# Run it
+java -jar target/klippy-0.0.1-SNAPSHOT.jar
+```
+
+### Docker
+
+The included `Dockerfile` performs a multi-stage production build. Use `docker compose` with a `.env` file for configuration.
+
+1. Copy the sample env file and fill in your values:
+
+```bash
+cp .env.sample .env
+```
+
+2. Edit `.env`:
+
+```properties
+# With OIDC authentication
+PORT=8080
+GLOBAL_SECURITY_ENABLED=true
+OIDC_CLIENT_ID=your-client-id
+OIDC_ISSUER_URI=https://your-provider.example.com
+PRINTER_HOST=192.168.1.100
+PRINTER_PORT=7125
+```
+
+Or to run without authentication:
+
+```properties
+PORT=8080
+GLOBAL_SECURITY_ENABLED=false
+PRINTER_HOST=192.168.1.100
+PRINTER_PORT=7125
+```
+
+3. Build and run:
+
+```bash
+docker compose up --build
+```
+
+The `PORT` value in `.env` controls the host port (e.g. `PORT=9090` makes the app available at `http://localhost:9090`).
