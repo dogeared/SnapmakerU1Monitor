@@ -1,6 +1,7 @@
 package com.example.klippy.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuc
 public class SpringSecurityConfig {
 
     @Bean
+    @ConditionalOnProperty(name = "global.security.enabled", havingValue = "true", matchIfMissing = true)
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         String[] allowedPaths = {"/VAADIN/**"};
 
@@ -42,12 +44,22 @@ public class SpringSecurityConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = "global.security.enabled", havingValue = "false")
+    SecurityFilterChain permitAllFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(requests -> requests.anyRequest().permitAll())
+            .csrf(csrf -> csrf.disable());
+
+        return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "spring.security.enabled", havingValue = "true", matchIfMissing = true)
     public LogoutSuccessHandler logoutSuccessHandler() {
         SimpleUrlLogoutSuccessHandler handler = new SimpleUrlLogoutSuccessHandler();
         handler.setDefaultTargetUrl("/");
         return handler;
     }
-
 
     private static boolean isVaadinInternalRequest(HttpServletRequest request) {
         String paramValue = request.getParameter("v-r");

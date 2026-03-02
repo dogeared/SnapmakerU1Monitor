@@ -66,7 +66,7 @@ public class MonitorView extends VerticalLayout {
         title = new H2(buildTitle());
         title.addClassName("view-title");
 
-        statusLabel = new Span("Connecting to " + config.host() + ":" + config.port() + "...");
+        statusLabel = new Span("Connecting to printer...");
         statusLabel.addClassName("status-label");
 
         startButton = new Button("Start Camera", e -> startCamera());
@@ -292,7 +292,7 @@ public class MonitorView extends VerticalLayout {
         snapshotService.ensureMonitorRunning();
         byte[] data = snapshotService.fetchSnapshot();
         if (data == null) {
-            ui.access(() -> statusLabel.setText("Unable to reach printer at " + config.host()));
+            ui.access(() -> statusLabel.setText("Unable to reach printer..."));
             return;
         }
         long frame = frameCounter.incrementAndGet();
