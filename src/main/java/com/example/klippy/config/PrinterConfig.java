@@ -14,7 +14,8 @@ public record PrinterConfig(
         int startCooldownSeconds,
         int idleStopSeconds,
         long statsIntervalMs,
-        long continuePromptMs
+        long continuePromptMs,
+        String tempDir
 ) {
     public PrinterConfig {
         if (name == null || name.isBlank()) name = "";
@@ -28,6 +29,7 @@ public record PrinterConfig(
         if (idleStopSeconds < 0) idleStopSeconds = 60;
         if (statsIntervalMs <= 0) statsIntervalMs = 10000;
         if (continuePromptMs <= 0) continuePromptMs = 30000;
+        if (tempDir == null || tempDir.isBlank()) tempDir = "/tmp";
     }
 
     public String snapshotUrl() {

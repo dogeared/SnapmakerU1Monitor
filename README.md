@@ -66,28 +66,25 @@ If `printer.name` and `printer.model` are not set, the app fetches the printer n
 2. Klipper hostname from `GET /printer/info`
 3. Falls back to "3D Printer Camera Monitor"
 
-## OIDC Authentication
+## Security
 
-The app requires OIDC authentication — all routes are protected by default. It works with any OIDC/OAuth2 provider (Okta, Auth0, Keycloak, Google, etc.) via Spring Security's auto-discovery.
+OIDC authentication is enabled by default. It works with any OIDC/OAuth2 provider (Okta, Auth0, Keycloak, Google, etc.) using the authorization code flow with PKCE.
 
-### Setup
+To disable authentication, set `global.security.enabled=false` (see [Quick Start](#quick-start)).
 
-1. Register an application with your OIDC provider
+### OIDC Setup
+
+1. Register an application with your OIDC provider (use authorization code flow with PKCE)
 2. Set the redirect URI to: `http://localhost:8080/login/oauth2/code/oidc-provider`
-3. Set the following environment variables:
-
-```bash
-export OIDC_CLIENT_ID=your-client-id
-export OIDC_CLIENT_SECRET=your-client-secret
-export OIDC_ISSUER_URI=https://your-provider.example.com
-```
-
+3. Set the `OIDC_CLIENT_ID` and `OIDC_ISSUER_URI` environment variables (see [Quick Start](#quick-start))
 4. Run the app — opening `http://localhost:8080` will redirect to your provider's login page
+
+OIDC properties are in `application-secure.properties`, which is only loaded when security is enabled. This is controlled by `SecurityProfileConfig`, an `EnvironmentPostProcessor` that activates the `secure` Spring profile based on the `global.security.enabled` property.
 
 ### Auth Flow
 
 1. User hits the app URL
-2. Spring Security redirects to the OIDC provider
+2. Spring Security redirects to the OIDC provider with PKCE code challenge
 3. User authenticates with the provider
 4. Provider redirects back with an authorization code
 5. Spring Security exchanges the code for tokens and creates a session
@@ -100,7 +97,8 @@ src/main/java/com/example/klippy/
 ├── KlippyApplication.java              # Spring Boot entry point, Vaadin Push config
 ├── config/
 │   ├── PrinterConfig.java              # @ConfigurationProperties record
-│   └── SecurityConfig.java             # OIDC authentication via VaadinWebSecurity
+│   ├── SecurityProfileConfig.java      # Activates "secure" profile when security is enabled
+│   └── SpringSecurityConfig.java       # OIDC authentication and permit-all fallback
 ├── service/
 │   ├── MoonrakerWebSocketClient.java   # WebSocket JSON-RPC client (oneshot token auth)
 │   ├── SnapshotService.java            # Camera control, image fetching, print stats
@@ -146,10 +144,10 @@ java -jar target/klippy-0.0.1-SNAPSHOT.jar
 
 The included `Dockerfile` performs a multi-stage production build. Use `docker compose` with a `.env` file for configuration.
 
-1. Copy the sample env file and fill in your values:
+1. Copy the example env file and fill in your values:
 
 ```bash
-cp .env.sample .env
+cp .env.example .env
 ```
 
 2. Edit `.env`:
